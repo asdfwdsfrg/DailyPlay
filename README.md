@@ -1,2 +1,2 @@
-# DayilyPlay
-my dayilyplay repository
+# DailyPlay
+my dailyplay repository
