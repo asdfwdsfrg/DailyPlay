@@ -61,6 +61,8 @@ set softtabstop=4
 "set foldmethod=indent
 set foldmethod=syntax
 set guifont=Monospace\ 20
+set autoindent
+set cindent
 let g:Powerline_colorscheme='solarized256'
 set clipboard+=unnamed 
 " Source a global configuration file if available
@@ -77,31 +79,100 @@ call vundle#begin()
 Plugin 'VundleVim/Vundle.vim'
 Plugin 'altercation/vim-colors-solarized'
 Plugin 'tomasr/molokai'
-Plugin 'vim-scripts/phd'
 Plugin 'Lokaltog/vim-powerline'
 Plugin 'octol/vim-cpp-enhanced-highlight'
 Plugin 'nathanaelkane/vim-indent-guides'
-Plugin 'derekwyatt/vim-fswitch'
+Plugin 'Valloric/ListToggle'
 Plugin 'kshenoy/vim-signature'
 Plugin 'majutsushi/tagbar'
-Plugin 'vim-scripts/indexer.tar.gz'
-Plugin 'vim-scripts/DfrankUtil'
-Plugin 'vim-scripts/vimprj'
-Plugin 'dyng/ctrlsf.vim'
 Plugin 'terryma/vim-multiple-cursors'
 Plugin 'scrooloose/nerdcommenter'
-Plugin 'vim-scripts/DrawIt'
-Plugin 'SirVer/ultisnips'
 Plugin 'Valloric/YouCompleteMe'
-Plugin 'derekwyatt/vim-protodef'
-Plugin 'scrooloose/nerdtree'
-Plugin 'fholgado/minibufexpl.vim'
-Plugin 'gcmt/wildfire.vim'
-Plugin 'sjl/gundo.vim'
-Plugin 'Lokaltog/vim-easymotion'
-Plugin 'suan/vim-instant-markdown'
-Plugin 'lilydjwg/fcitx.vim'
 Plugin 'jiangmiao/auto-pairs'
 " 插件列表结束
 call vundle#end()
 filetype plugin indent on
+let g:ycm_server_keep_logfiles = 1
+let g:ycm_server_log_level = 'debug'
+func! CompileGcc()
+    exec "w"
+    let compilecmd="!gcc "
+    let compileflag="-o %< "
+    if search("mpi\.h") != 0
+        let compilecmd = "!mpicc"
+    endif
+    if search("glut\.h") != 0
+        let compileflag .= " -lglut -lGLU -lGL "
+    endif
+    if search("cv\.h") != 0
+        let compileflag .= " -lcv -lhighgui -lcvaux "
+    endif
+    if search("omp\.h") != 0
+        let compileflag .= " -fopenmp "
+    endif
+    if search("math\.h") != 0
+        let compileflag .= " -lm "
+    endif
+    exec compilecmd." % ".compileflag
+endfunc
+func! CompileGpp()
+    exec "w"
+    let compilecmd="!clang++"
+    let compileflag="-std=c++11 -o %< "
+    if search("mpi\.h") != 0
+        let compilecmd = "!mpic++ "
+    endif
+    if search("glut\.h") != 0
+        let compileflag .= " -lglut -lGLU -lGL "
+    endif
+    if search("cv\.h") != 0
+        let compileflag .= " -lcv -lhighgui -lcvaux "
+    endif
+    if search("omp\.h") != 0
+        let compileflag .= " -fopenmp "
+    endif
+    if search("math\.h") != 0
+        let compileflag .= " -lm "
+    endif
+    exec compilecmd." % ".compileflag
+endfunc
+
+func! RunPython()
+        exec "!python %"
+endfunc
+func! CompileJava()
+    exec "!javac %"
+endfunc
+
+
+func! CompileCode()
+        exec "w"
+        if &filetype == "cpp"
+                exec "call CompileGpp()"
+        elseif &filetype == "c"
+                exec "call CompileGcc()"
+        elseif &filetype == "python"
+                exec "call RunPython()"
+        elseif &filetype == "java"
+                exec "call CompileJava()"
+        endif
+endfunc
+
+func! RunResult()
+        exec "w"
+        if search("mpi\.h") != 0
+            exec "!mpirun -np 4 ./%<"
+        elseif &filetype == "cpp"
+            exec "! ./%<"
+        elseif &filetype == "c"
+            exec "! ./%<"
+        elseif &filetype == "python"
+            exec "call RunPython"
+        elseif &filetype == "java"
+            exec "!java %<"
+        endif
+endfunc
+map <F5> :call CompileCode()<CR>
+imap <F5> <ESC>:call CompileCode()<CR>
+vmap <F5> <ESC>:call CompileCode()<CR>
+map <F6> :call RunResult()<CR>
